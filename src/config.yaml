@@ -1,2 +1,1 @@
-db:
-  path = "~/jamdoc.db"
+db_path: "library.db"

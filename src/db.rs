@@ -1,6 +1,9 @@
 use crate::models::{Library, Track};
 use anyhow::Result;
 use rusqlite::Connection;
+use std::path::PathBuf;
+
+use log::debug;
 
 /// Connect to an in-memory SQLite database.
 pub fn connect() -> Result<Connection> {
@@ -26,13 +29,12 @@ pub fn create_track_table(conn: &Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE track (
             id INTEGER PRIMARY KEY,
-            library_id INTEGER NOT NULL,
-            title STRING NOT NULL,
+            path STRING NOT NULL,
+            title STRING,
             artist STRING,
             album STRING,
             bitrate INTEGER NOT NULL,
-            tagver STRING,
-            FOREIGN KEY (library_id) REFERENCES library(id)
+            tagver STRING
         )",
         (),
     )?;
@@ -42,8 +44,15 @@ pub fn create_track_table(conn: &Connection) -> Result<()> {
 /// For a given track struct, extract its values and insert into the db
 pub fn insert_track(conn: &Connection, track: &Track) -> Result<()> {
     conn.execute(
-        "INSERT INTO track (library_id, title, artist, album, bitrate, tagver) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-        (track.id, &track.title, &track.artist, &track.album, &track.bitrate, &track.tagver),
+        "INSERT INTO track (path, title, artist, album, bitrate, tagver) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        (
+            &track.path,
+            &track.title,
+            &track.artist,
+            &track.album,
+            &track.bitrate,
+            &track.tagver,
+        ),
     )?;
     Ok(())
 }
@@ -54,5 +63,15 @@ pub fn insert_library(conn: &Connection, library: &Library) -> Result<()> {
         "INSERT INTO library (name, path) VALUES (?1, ?2)",
         (&library.name, &library.path),
     )?;
+    Ok(())
+}
+
+pub fn index_paths(conn: &Connection, paths: &Vec<PathBuf>) -> Result<()> {
+    for path in paths {
+        let t = Track::from(path);
+        println!("{:?}", t);
+        insert_track(conn, &t)?;
+    }
+
     Ok(())
 }

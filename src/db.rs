@@ -1,9 +1,8 @@
 use crate::models::{Library, Track};
 use anyhow::Result;
+use log::warn;
 use rusqlite::Connection;
 use std::path::PathBuf;
-
-use log::debug;
 
 /// Connect to an in-memory SQLite database.
 pub fn connect() -> Result<Connection> {
@@ -69,7 +68,9 @@ pub fn insert_library(conn: &Connection, library: &Library) -> Result<()> {
 pub fn index_paths(conn: &Connection, paths: &Vec<PathBuf>) -> Result<()> {
     for path in paths {
         let t = Track::from(path);
-        println!("{:?}", t);
+        if t.title.is_none() {
+            warn!("Track {} has no title", path.display());
+        }
         insert_track(conn, &t)?;
     }
 

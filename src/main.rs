@@ -11,6 +11,7 @@ mod scan;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    colog::init();
     let args: Vec<String> = env::args().collect();
 
     let conn = db::connect()?;
